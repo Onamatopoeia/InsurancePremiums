@@ -1,10 +1,3 @@
-"""
-monitor.py
-----------
-Simulates user activity monitoring (adherence to interventions)
-and uses that data to retrain the ML model.
-"""
-
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Any
@@ -12,16 +5,6 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 def simulate_user_activity(results: List[Dict[str, Any]], seed: int = 0) -> pd.DataFrame:
-    """
-    Simulate user engagement data for each intervention assigned.
-
-    In production this would come from:
-    - Wearable device sync
-    - App check-ins
-    - Health provider reports
-
-    Returns a DataFrame with one row per user summarising adherence.
-    """
     rng = np.random.default_rng(seed)
     records = []
 
@@ -38,7 +21,6 @@ def simulate_user_activity(results: List[Dict[str, Any]], seed: int = 0) -> pd.D
         n_completed = int(rng.binomial(n_interventions, base_p))
         adherence_pct = n_completed / n_interventions if n_interventions else 0
 
-        # Simulate a follow-up risk score reduction
         reduction = adherence_pct * 15 * rng.uniform(0.5, 1.0)
         new_score = max(0, r["risk_score"] - reduction)
 
@@ -68,22 +50,12 @@ def retrain_model(
     activity_data: pd.DataFrame,
     feature_cols: List[str],
 ) -> RandomForestClassifier:
-    """
-    Retrain the model incorporating activity monitoring insights.
-
-    Strategy: users with high adherence and risk reduction get their
-    records re-weighted (upsampled) so the model learns that
-    lifestyle changes genuinely shift risk profiles.
-    """
     from ml_module import _encode_features, TARGET_COL
     from sklearn.preprocessing import LabelEncoder
 
-    # Identify high-adherence users (>= 70%)
     high_adherence = activity_data[activity_data["adherence_pct"] >= 70]
-    n_upsampled = len(high_adherence) * 3  # upsample 3x
+    n_upsampled = len(high_adherence) * 3
 
-    # For simplicity: duplicate 'Healthy' records proportional to adherence
-    # (represents what those users' future data would look like)
     healthy_records = original_df[original_df[TARGET_COL] == "Healthy"]
 
     if len(healthy_records) > 0 and n_upsampled > 0:

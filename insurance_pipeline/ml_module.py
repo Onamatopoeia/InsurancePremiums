@@ -1,10 +1,3 @@
-"""
-ml_module.py
-------------
-Trains a Random Forest classifier on the dynamic dataset to predict
-medical conditions. Returns the model, feature list, and label encoder.
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -19,7 +12,6 @@ TARGET_COL = "condition"
 
 
 def _encode_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, OrdinalEncoder]:
-    """Ordinal-encode categorical columns."""
     enc = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
     df = df.copy()
     df[CATEGORICAL_COLS] = enc.fit_transform(df[CATEGORICAL_COLS])
@@ -30,15 +22,6 @@ def train_model(
     df: pd.DataFrame,
     verbose: bool = True,
 ) -> Tuple[RandomForestClassifier, List[str], LabelEncoder]:
-    """
-    Train a RandomForest on the dataset.
-
-    Returns
-    -------
-    model         : trained classifier
-    feature_cols  : ordered list of feature column names
-    label_encoder : fitted LabelEncoder for the target
-    """
     df_enc, _ = _encode_features(df)
 
     feature_cols = [c for c in df_enc.columns if c != TARGET_COL]
@@ -69,7 +52,6 @@ def train_model(
             y_test, model.predict(X_test),
             target_names=le.classes_, zero_division=0
         )
-        # Print a condensed version
         lines = [l for l in report.split("\n") if l.strip()]
         print(f"      {'Class':<30} {'Precision':>9} {'Recall':>7} {'F1':>6}")
         print(f"      {'─'*55}")
@@ -88,10 +70,6 @@ def predict_conditions(
     X: pd.DataFrame,
     label_encoder: LabelEncoder,
 ) -> List[str]:
-    """
-    Predict medical conditions for new user records.
-    X must contain only the feature columns (no target).
-    """
     df_enc, _ = _encode_features(X.assign(condition="Healthy"))
     feature_cols = [c for c in df_enc.columns if c != TARGET_COL]
     X_vals = df_enc[feature_cols].values

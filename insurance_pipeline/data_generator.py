@@ -1,10 +1,3 @@
-"""
-data_generator.py
------------------
-Generates a realistic synthetic dataset of insurance users.
-Features: demographics, lifestyle, medical history, insurance history.
-"""
-
 import numpy as np
 import pandas as pd
 from typing import Optional
@@ -25,7 +18,6 @@ CONDITION_WEIGHTS = [0.35, 0.15, 0.15, 0.10, 0.10, 0.07, 0.05, 0.03]
 
 
 def generate_dataset(n_samples: int = 1000, seed: Optional[int] = None) -> pd.DataFrame:
-    """Generate a synthetic user dataset for training or inference."""
     rng = np.random.default_rng(seed)
 
     age = rng.integers(18, 80, size=n_samples)
@@ -52,7 +44,6 @@ def generate_dataset(n_samples: int = 1000, seed: Optional[int] = None) -> pd.Da
         ["low", "medium", "high"], size=n_samples, p=[0.30, 0.45, 0.25]
     )
 
-    # Derive condition with some feature correlation
     condition_probs = _compute_condition_probs(
         rng, n_samples, age, bmi, systolic_bp, blood_glucose,
         smoker, family_history_heart, family_history_diabetes
@@ -87,26 +78,20 @@ def generate_dataset(n_samples: int = 1000, seed: Optional[int] = None) -> pd.Da
 def _compute_condition_probs(
     rng, n, age, bmi, sbp, glucose, smoker, fh_heart, fh_diabetes
 ) -> list:
-    """Adjust condition probabilities based on risk factors."""
     probs = []
     base = np.array(CONDITION_WEIGHTS, dtype=float)
 
     for i in range(n):
         w = base.copy()
 
-        # Diabetes risk
         if glucose[i] > 126 or bmi[i] > 30 or fh_diabetes[i]:
             w[1] *= 3.0
-        # Hypertension
         if sbp[i] > 140 or age[i] > 55:
             w[2] *= 2.5
-        # Cardiovascular
         if smoker[i] or fh_heart[i] or age[i] > 60:
             w[3] *= 2.5
-        # Obesity
         if bmi[i] > 30:
             w[4] *= 3.0
-        # Healthy less likely if multiple risks
         risk_count = sum([
             glucose[i] > 126, bmi[i] > 30, sbp[i] > 140,
             smoker[i], fh_heart[i], age[i] > 60

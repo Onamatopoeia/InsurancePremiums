@@ -1,9 +1,3 @@
-"""
-Medical Insurance Risk Assessment Pipeline
-==========================================
-End-to-end: data → ML → risk scoring → personalized interventions
-"""
-
 from data_generator import generate_dataset
 from ml_module import train_model, predict_conditions
 from risk_module import assess_risk
@@ -18,25 +12,21 @@ def run_pipeline(n_train_samples: int = 1000, n_new_users: int = 5):
     print("  MEDICAL INSURANCE RISK ASSESSMENT PIPELINE")
     print("=" * 60)
 
-    # ── Step 1: Load dynamic dataset ──────────────────────────────
     print("\n[1/5] Generating dynamic dataset...")
     df = generate_dataset(n_samples=n_train_samples)
     print(f"      {len(df)} training records | {df.shape[1]} features")
     print(f"      Columns: {list(df.columns)}")
 
-    # ── Step 2: Train ML model ─────────────────────────────────────
     print("\n[2/5] Training machine learning model...")
     model, feature_cols, label_encoder = train_model(df)
     print(f"      Model: Random Forest  |  Features: {len(feature_cols)}")
 
-    # ── Step 3: Predict conditions for new users ───────────────────
     print("\n[3/5] Predicting medical conditions for new users...")
     new_users = generate_dataset(n_samples=n_new_users, seed=42)
     predictions = predict_conditions(model, new_users[feature_cols], label_encoder)
     new_users["predicted_condition"] = predictions
     print(f"      Processed {n_new_users} new user(s)")
 
-    # ── Step 4: Risk assessment + interventions ────────────────────
     print("\n[4/5] Running risk assessment & generating interventions...")
     print()
     results = []
@@ -55,7 +45,6 @@ def run_pipeline(n_train_samples: int = 1000, n_new_users: int = 5):
         results.append(result)
         _print_user_report(result)
 
-    # ── Step 5: Monitor activity & retrain ────────────────────────
     print("\n[5/5] Simulating user activity monitoring & model retraining...")
     activity_data = simulate_user_activity(results)
     model = retrain_model(model, df, activity_data, feature_cols)

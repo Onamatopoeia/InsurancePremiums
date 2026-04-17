@@ -1,9 +1,3 @@
-"""
-intervention_module.py
-----------------------
-Generates personalised, prioritised intervention recommendations for a user
-based on their risk level, predicted condition, and specific risk factors.
-"""
 
 import pandas as pd
 from typing import List
@@ -14,19 +8,9 @@ def generate_interventions(
     user: pd.Series,
     risk_factors: List[str],
 ) -> List[str]:
-    """
-    Return a list of targeted intervention strings for the user.
-
-    Parameters
-    ----------
-    risk_level   : "Low" | "Medium" | "High" | "Critical"
-    user         : pd.Series of user features + predicted_condition
-    risk_factors : top risk factors from assess_risk()
-    """
     interventions: List[str] = []
     condition = user.get("predicted_condition", "Healthy")
 
-    # ── Condition-specific programs ──────────────────────────────
     condition_programs = {
         "Type 2 Diabetes": (
             "Enroll in Diabetes Prevention Program (DPP) — "
@@ -61,7 +45,6 @@ def generate_interventions(
     if condition in condition_programs:
         interventions.append(condition_programs[condition])
 
-    # ── Lifestyle-specific recommendations ───────────────────────
     if user["smoker"] == 1:
         interventions.append(
             "Smoking Cessation Program — nicotine replacement therapy, "
@@ -103,7 +86,6 @@ def generate_interventions(
             "for sleep disorders (covered under wellness benefit)"
         )
 
-    # ── Clinical / preventive care ───────────────────────────────
     if user["blood_glucose"] >= 100:
         interventions.append(
             "Annual HbA1c & fasting glucose screening — "
@@ -134,7 +116,6 @@ def generate_interventions(
             "and get a proactive surveillance plan"
         )
 
-    # ── Risk-level escalation interventions ──────────────────────
     if risk_level == "Critical":
         interventions.insert(
             0,
@@ -148,12 +129,11 @@ def generate_interventions(
             "within 2 weeks (co-pay waived)"
         )
 
-    # ── Premium incentive (always last) ──────────────────────────
+
     if risk_level in ("Medium", "High", "Critical"):
         interventions.append(
             "Premium Reduction Pathway — complete 3+ interventions within "
             "6 months to qualify for up to 15% annual premium discount"
         )
 
-    # Cap at 6 interventions to avoid overwhelming the user
     return interventions[:6]

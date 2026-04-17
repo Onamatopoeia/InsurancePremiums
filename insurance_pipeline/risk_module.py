@@ -1,15 +1,6 @@
-"""
-risk_module.py
---------------
-Computes a risk score (0–100) and risk level (Low / Medium / High / Critical)
-for a user based on their predicted condition and raw features.
-Returns the score, level, and a list of the top contributing risk factors.
-"""
-
 import pandas as pd
 from typing import Tuple, List
 
-# Base risk points per predicted condition
 CONDITION_BASE_RISK = {
     "Healthy":                 5,
     "Asthma":                 20,
@@ -30,24 +21,10 @@ RISK_BANDS = [
 
 
 def assess_risk(user: pd.Series) -> Tuple[str, int, List[str]]:
-    """
-    Assess insurance risk for a single user.
-
-    Parameters
-    ----------
-    user : pd.Series with all feature columns + 'predicted_condition'
-
-    Returns
-    -------
-    risk_level   : "Low" | "Medium" | "High" | "Critical"
-    risk_score   : int 0–100
-    risk_factors : list of human-readable contributing factors
-    """
     condition = user.get("predicted_condition", "Healthy")
     score = CONDITION_BASE_RISK.get(condition, 10)
     factors: List[str] = []
 
-    # ── Lifestyle modifiers ──────────────────────────────────────
     if user["smoker"] == 1:
         score += 12
         factors.append("Active smoker (+12 pts)")
@@ -75,7 +52,6 @@ def assess_risk(user: pd.Series) -> Tuple[str, int, List[str]]:
         score += 4
         factors.append(f"Sleep deprivation ({user['sleep_hours']:.1f} hrs/night, +4 pts)")
 
-    # ── Clinical markers ─────────────────────────────────────────
     if user["systolic_bp"] >= 160:
         score += 10
         factors.append(f"Severely elevated BP ({user['systolic_bp']}/{user['diastolic_bp']}, +10 pts)")
@@ -94,7 +70,6 @@ def assess_risk(user: pd.Series) -> Tuple[str, int, List[str]]:
         score += 6
         factors.append(f"High cholesterol ({user['cholesterol']} mg/dL, +6 pts)")
 
-    # ── History & demographics ────────────────────────────────────
     if user["prior_claims"] >= 5:
         score += 8
         factors.append(f"High prior claims ({user['prior_claims']}, +8 pts)")
@@ -117,7 +92,6 @@ def assess_risk(user: pd.Series) -> Tuple[str, int, List[str]]:
         score += 4
         factors.append(f"Age 50+ ({int(user['age'])} yrs, +4 pts)")
 
-    # ── Clamp and classify ────────────────────────────────────────
     score = min(score, 100)
 
     risk_level = "Low"
@@ -126,7 +100,6 @@ def assess_risk(user: pd.Series) -> Tuple[str, int, List[str]]:
             risk_level = level
             break
 
-    # Surface top 4 factors only (already ordered by addition sequence ≈ impact)
     top_factors = factors[:4] if factors else ["No significant risk factors identified"]
 
     return risk_level, score, top_factors
